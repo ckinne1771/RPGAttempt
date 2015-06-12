@@ -10,4 +10,5 @@ public class PartyMemberScript : MonoBehaviour {
 	public int magicAttackPoints;
 	public int magicDefensePoints;
 	public int speed;
+	public bool isPlayer;
 }

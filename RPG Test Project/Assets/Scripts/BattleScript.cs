@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class BattleScript : MonoBehaviour {
 	public GameObject player1;
@@ -11,12 +13,14 @@ public class BattleScript : MonoBehaviour {
 	public GameObject enemy3;
 	public GameObject enemy4;
 	public GameObject enemy5;
-	private GameObject[] players;
+	private List<GameObject> players = new List<GameObject>();
+	private List<GameObject> sortedPlayers = new List<GameObject>();
 //	private GameObject[] enemies;
 	//private GameObject[] characters;
-
+	public static bool choiceMade = false;
 	public enum BattleState {
 		START,
+		SORT,
 		PLAYERCHOICE,
 		ENEMYCHOICE,
 		LOSE,
@@ -27,7 +31,7 @@ public class BattleScript : MonoBehaviour {
 
 	void Start()
 	{
-		players = GameObject.FindGameObjectsWithTag("Character");
+		players.AddRange(GameObject.FindGameObjectsWithTag ("Character"));
 	//	enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		if(players[0]!= null)
 		{
@@ -109,7 +113,11 @@ public class BattleScript : MonoBehaviour {
 		}
 	}
 
-	private class sortCharacterStatsSpeed: IComparer
+	public void ChoiceForButton(){
+		choiceMade = true;
+	}
+
+/*	private class sortCharacterStatsSpeed: IComparer
 	{
 		int IComparer.Compare(object a, object b){
 			PartyMemberScript p1 = ((GameObject)a).GetComponent<PartyMemberScript>();
@@ -121,26 +129,62 @@ public class BattleScript : MonoBehaviour {
 			else
 				return 0;
 		}
-	}
+	}*/
 	void Update() {
 		switch (currentState) {
 		case BattleState.START:
 			//SETUP
 
-		
-
-			Array.Sort(players, (IComparer)new sortCharacterStatsSpeed());
-			foreach (GameObject player in players)
+			sortedPlayers = players.OrderByDescending(x=>x.GetComponent<PartyMemberScript>().speed).ToList();
+			/*foreach (GameObject player in sortedPlayers)
 			{
 			Debug.Log (player.GetComponent<PartyMemberScript>().speed);
+			}*/
+			currentState = BattleState.SORT;
+
+			break;
+		case BattleState.SORT:
+			if(sortedPlayers[0].GetComponent<PartyMemberScript>().isPlayer ==true)
+			{
+				currentState = BattleState.PLAYERCHOICE;
 			}
-			currentState = BattleState.PLAYERCHOICE;
+			else
+			{ 
+				currentState = BattleState.ENEMYCHOICE;
+			}
 			break;
 		case BattleState.PLAYERCHOICE:
 			//Player Choice
+			//Debug.Log ("Player");
+
+			UIScript.buttonsActive = true;
+			if(sortedPlayers[0].gameObject.name=="Party Member 1")
+			{
+				UIScript.TurnIndictator1GO.SetActive(true);
+			}
+			if(sortedPlayers[0].gameObject.name=="Party Member 2")
+			{
+				UIScript.TurnIndictator2GO.SetActive(true);
+			}
+			if(sortedPlayers[0].gameObject.name=="Party Member 3")
+			{
+				UIScript.TurnIndictator3GO.SetActive(true);
+			}
+			 
+			if(choiceMade == true)
+			{
+				sortedPlayers.RemoveAt (0);
+				choiceMade = false;
+				UIScript.buttonsActive = false;
+				currentState = BattleState.SORT;
+				break;
+			}
+
+			//currentState = BattleState.ENEMYCHOICE;
 			break;
 		case BattleState.ENEMYCHOICE:
 			//Enemy turn
+			Debug.Log ("Enemy");
 			break;
 		case BattleState.LOSE:
 			//Lost Battle
